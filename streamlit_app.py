@@ -190,7 +190,6 @@ elif page == '수질 지표 예측':
     else:
         fig = px.line(df, x='date', y='predicted_chlorophyll', title='예측 조류량 추세')
         st.plotly_chart(fig, use_container_width=True)
-ㅇ
         selected_date = st.sidebar.date_input('날짜 선택')
         selected_row = df[df['date'] == str(selected_date)]
 
