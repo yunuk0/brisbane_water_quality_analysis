@@ -141,24 +141,24 @@ elif page == '월별 수질 경향':
     month_df = df[df['month'] == selected_month]
     avg_values = month_df.mean(numeric_only=True)
 
-    st.subheader(f'📌 {selected_month}월 주요 수질 평균')
+    st.subheader(f' {selected_month}월 주요 수질 평균')
 
     cols = st.columns(4)
-    cols[0].metric('평균 클로로필 농도', f"{avg_values['Chlorophyll_Kalman']:.2f}")
-    cols[1].metric('평균 수온', f"{avg_values['Temperature_Kalman']:.2f}")
-    cols[2].metric('평균 용존산소', f"{avg_values['Dissolved Oxygen_Kalman']:.2f}")
-    cols[3].metric('평균 산소 포화도', f"{avg_values['W_Relative Humidity']:.2f}")
+    cols[0].metric('🌱 클로로필 농도', f"{avg_values['Chlorophyll_Kalman']:.2f}")
+    cols[1].metric('🌡️ 수온', f"{avg_values['Temperature_Kalman']:.2f}")
+    cols[2].metric('🫧 용존산소', f"{avg_values['Dissolved Oxygen_Kalman']:.2f}")
+    cols[3].metric('💧 산소 포화도', f"{avg_values['W_Relative Humidity']:.2f}")
 
     cols2 = st.columns(4)
-    cols2[0].metric('평균 pH', f"{avg_values['pH_Kalman']:.2f}")
-    cols2[1].metric('평균 염분 농도', f"{avg_values['Salinity_Kalman']:.2f}")
-    cols2[2].metric('평균 전기전도도', f"{avg_values['Specific Conductance_Kalman']:.2f}")
-    cols2[3].metric('평균 탁도', f"{avg_values['Turbidity_Kalman']:.2f}")
+    cols2[0].metric('🧪 pH', f"{avg_values['pH_Kalman']:.2f}")
+    cols2[1].metric('🌊 염분 농도', f"{avg_values['Salinity_Kalman']:.2f}")
+    cols2[2].metric('🔌 전기전도도', f"{avg_values['Specific Conductance_Kalman']:.2f}")
+    cols2[3].metric('🌫️ 탁도', f"{avg_values['Turbidity_Kalman']:.2f}")
 
     daily_avg = month_df.groupby('day', as_index=False)['Chlorophyll_Kalman'].mean()
 
     fig = px.bar(daily_avg, x='day', y='Chlorophyll_Kalman',
-                 title=f'🗓️ {selected_month}월 일별 조류량', color_discrete_sequence=["#3E3F40"],
+                 title=f' {selected_month}월 일별 조류량 🗓️', color_discrete_sequence=["#3E3F40"],
                  labels={'day': '일', 'Chlorophyll_Kalman': '평균 클로로필 농도 (µg/L)'})
 
     fig.add_hrect(y0=0, y1=4, fillcolor="green", opacity=0.05, line_width=0, layer="below")
