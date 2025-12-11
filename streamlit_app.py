@@ -64,11 +64,10 @@ st.markdown(
     border: 1px solid rgba(148, 163, 184, 0.4);
 }}
 
-/* (
 /* =========================================================
    메인 카드 (모바일 = 1단, 데스크톱 = 2단)
    ========================================================= */
-.hero-card {
+.hero-card {{
     padding: 1.2rem 1.4rem;
     border-radius: 1.3rem;
     background: radial-gradient(circle at top, #1d2752, #020617);
@@ -82,80 +81,76 @@ st.markdown(
 
     min-height: 260px;
     height: auto;
-}
+}}
 
 /* 데스크톱 이상에서만 좌/우 2열 */
-@media (min-width: 900px) {
-  .hero-card {
+@media (min-width: 900px) {{
+  .hero-card {{
       grid-template-columns: 2fr 1.1fr;
       column-gap: 2rem;
-  }
-}
+  }}
+}}
 
-/* 왼쪽 열: 텍스트 블록 세로 중앙 정렬 */
-.hero-left {
+.hero-left {{
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
+}}
 
-.hero-title {
+.hero-title {{
     font-size: 0.85rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     opacity: 0.7;
-}
-.hero-location {
+}}
+.hero-location {{
     font-size: 1.1rem;
     margin-top: 0.2rem;
     font-weight: 600;
-}
+}}
 
-/* 수치 한 줄 */
-.hero-main-row {
+.hero-main-row {{
     display: flex;
     align-items: flex-end;
-    flex-wrap: wrap;           /* 좁은 화면에서 줄바꿈 허용 */
+    flex-wrap: wrap;
     gap: 0.2rem;
     margin-top: 0.5rem;
-}
-.hero-main-value {
+}}
+.hero-main-value {{
     font-size: clamp(2.4rem, 6vw, 3.5rem);
     font-weight: 800;
     line-height: 1.05;
-}
-.hero-main-unit {
+}}
+.hero-main-unit {{
     font-size: 1.1rem;
     opacity: 0.8;
     margin-bottom: 0.3rem;
-}
+}}
 
-.hero-label {
+.hero-label {{
     font-size: 0.85rem;
     opacity: 0.75;
     margin-top: 0.4rem;
     margin-bottom: 0.05rem;
-}
-.hero-subtext {
+}}
+.hero-subtext {{
     font-size: 0.78rem;
     opacity: 0.8;
     margin-top: 0rem;
-}
-.hero-subtext-note {
+}}
+.hero-subtext-note {{
     font-size: 0.75rem;
     opacity: 0.6;
     margin-top: 0.2rem;
-}
+}}
 
-/* 오른쪽 열: 상태 박스 */
-.hero-status-box {
+.hero-status-box {{
     display: flex;
     align-items: center;
     justify-content: center;
-}
+}}
 
-/* 상태 배지 (좋음/주의/위험) – 반응형 캡슐 박스 */
-.hero-badge {
+.hero-badge {{
     width: 100%;
     max-width: 420px;
     height: 100%;
@@ -171,76 +166,70 @@ st.markdown(
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-}
-.hero-badge span:first-child {
+}}
+.hero-badge span:first-child {{
     font-size: 1.4rem;
-}
-.hero-badge-label {
+}}
+.hero-badge-label {{
     font-size: clamp(2.2rem, 5vw, 4rem);
     font-weight: 700;
-}
+}}
 
-/* 모바일에서 배지 최소 높이 확보 */
-@media (max-width: 899px) {
-  .hero-status-box {
+@media (max-width: 899px) {{
+  .hero-status-box {{
       min-height: 140px;
-  }
-}
+  }}
+}}
 
-/* chip 카드들 */
-.chip-box {
+.chip-box {{
     padding: 0.75rem 0.9rem;
     border-radius: 1rem;
     background-color: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(148, 163, 184, 0.35);
     font-size: 0.78rem;
     margin-bottom: 0.4rem;
-}
-.chip-label {
+}}
+.chip-label {{
     opacity: 0.7;
     font-size: 0.76rem;
-}
-.chip-value {
+}}
+.chip-value {{
     font-size: 1.05rem;
     font-weight: 600;
     margin-top: 0.2rem;
-}
-.small-title {
+}}
+.small-title {{
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
     margin-top: 0.8rem;
-}
-.section-title {
+}}
+.section-title {{
     font-size: 1.0rem;
     font-weight: 700;
     margin-top: 1.2rem;
     margin-bottom: 0.5rem;
-}
-.info-text {
+}}
+.info-text {{
     font-size: 0.9rem;
     opacity: 0.8;
-}
+}}
 
-/* 아주 작은 화면에서 표, 차트 여백 살짝 조정 */
-@media (max-width: 600px) {
-  .section-title {
+@media (max-width: 600px) {{
+  .section-title {{
       margin-top: 1rem;
-  }
-}
+  }}
+}}
 
-/* ===== Metric 색상 커스터마이즈 (예보 평균/최대 등) ===== */
-div[data-testid="stMetricLabel"] {
-    color: #f9fafb !important;   /* 라벨: 예보 평균, 예보 최대, 위험 구간 등 */
-}
-div[data-testid="stMetricValue"] {
-    color: #f9fafb !important;   /* 값 숫자 */
-}
-div[data-testid="stMetricDelta"] {
-    color: #f97316 !important;   /* 증감(▲/▼) 사용하는 경우 */
-}
-
-) */
+div[data-testid="stMetricLabel"] {{
+    color: #f9fafb !important;
+}}
+div[data-testid="stMetricValue"] {{
+    color: #f9fafb !important;
+}}
+div[data-testid="stMetricDelta"] {{
+    color: #f97316 !important;
+}}
 
 </style>
 """,
