@@ -17,14 +17,6 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-
-/* 페이지 로드 시 잠깐 튀는 물방울 애니메이션 */
-@keyframes water-splash {
-    0% { transform: translateY(0) scale(0.5); opacity: 0; }
-    50% { transform: translateY(-50px) scale(1); opacity: 1; }
-    100% { transform: translateY(-100px) scale(0.8); opacity: 0; }
-}
-
 .stApp {
     background: radial-gradient(circle at top, #0b1020 0, #020617 55%, #020617 100%);
     color: #e5e7eb;
@@ -358,8 +350,6 @@ if forecast_df is not None and not forecast_df.empty:
 # ============================================================
 # 헤더
 # ============================================================
-
-st.markdown('<div class="splash-icon">💧</div>', unsafe_allow_html=True)
 
 st.markdown(
     '<div class="main-title">브리즈번 수질 알리미</div>',
