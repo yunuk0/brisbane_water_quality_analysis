@@ -4,34 +4,43 @@ import numpy as np
 from pathlib import Path
 import plotly.express as px
 import datetime
+import base64
 
 # ============================================================
-# 기본 설정 & 스타일 (날씨앱 느낌 + 반응형)
+# 배경 이미지 선택
 # ============================================================
 STATIC_DIR = Path(__file__).parent / "static"
 
-# 경로 생성 (Streamlit은 /static/ 으로 사용해야 함)
 bg_good = "/static/bg_good.jpg"
 bg_warning = "/static/bg_warning.jpg"
 bg_danger = "/static/bg_danger.jpg"
+bg_unknown = "/static/bg_unknown.jpg"
 
-# 예시: 수질 상태에 따른 라벨 (나중에 네 로직 연결하면 됨)
-# status = "good" / "warning" / "danger"
-status = "good"   # ← 일단 테스트용 / 나중에 실제 데이터로 변경
-
-def pick_background(status):
-    if status == "good":
+def pick_background_by_status(status: str):
+    if status == "좋음":
         return bg_good
-    elif status == "warning":
+    elif status == "주의":
         return bg_warning
-    else:
+    elif status == "위험":
         return bg_danger
+    else:
+        return bg_unknown
 
-current_bg = pick_background(status)
+
+# ============================================================
+# 현재 상태 진단 → 배경 선택
+# ============================================================
+chl_value = get_last_valid(df, "Chlorophyll_Kalman") if not df.empty else np.nan
+status_label, icon, color, desc = classify_chl(chl_value)
+current_bg = pick_background_by_status(status_label)
+
+# ============================================================
+# CSS 스타일 삽입
+# ============================================================
 st.markdown(
     f"""
 <style>
-/* 전체 배경 (이미지 URL을 current_bg로 넣어 사용) */
+/* 전체 배경 */
 .stApp {{
     background-image: url('{current_bg}');
     background-size: cover;
