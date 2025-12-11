@@ -8,14 +8,26 @@ import datetime
 # ============================================================
 # 기본 설정 & 스타일 (날씨앱 느낌 + 반응형)
 # ============================================================
-current_bg = "data/bg_good.jpg"
+STATIC_DIR = Path(__file__).parent / "static"
 
-st.set_page_config(
-    page_title="브리즈번 수질 알리미",
-    page_icon=":droplet:",
-    layout="wide",
-)
+# 경로 생성 (Streamlit은 /static/ 으로 사용해야 함)
+bg_good = "/static/bg_good.jpg"
+bg_warning = "/static/bg_warning.jpg"
+bg_danger = "/static/bg_danger.jpg"
 
+# 예시: 수질 상태에 따른 라벨 (나중에 네 로직 연결하면 됨)
+# status = "good" / "warning" / "danger"
+status = "good"   # ← 일단 테스트용 / 나중에 실제 데이터로 변경
+
+def pick_background(status):
+    if status == "good":
+        return bg_good
+    elif status == "warning":
+        return bg_warning
+    else:
+        return bg_danger
+
+current_bg = pick_background(status)
 st.markdown(
     f"""
 <style>
