@@ -387,7 +387,7 @@ with col_hero_main:
     <span class="hero-main-unit">µg/L</span>
   </div>
 
-  <div class="hero-label">현재 조류(클로로필) 보정값 기준</div>
+  <div class="hero-label">현재 조류(클로로필)</div>
   <div class="hero-subtext">{level_msg}</div>
   <div class="hero-subtext hero-subtext-note">
     ※ 환경부·호주 환경기준 참고(0–4 µg/L 양호, 4–8 주의, 8 이상 위험)
@@ -544,7 +544,7 @@ else:
 
     # 프레임 슬라이더 라벨 조정
     frame_labels = {
-        i: ts.strftime("%Y-%m-%d %H:%M")
+        i: ts.strftime("%m-%d %H:%M")
         for i, ts in enumerate(base["Timestamp"])
     }
     if fig_fore.layout.sliders and len(fig_fore.layout.sliders) > 0:
