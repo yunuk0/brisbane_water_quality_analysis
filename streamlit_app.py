@@ -449,7 +449,7 @@ with col_hero_main:
   <div class="hero-label"> 조류 농도 (클로로필 기준)</div>
   <div class="hero-subtext">{level_msg}</div>
   <div class="hero-subtext hero-subtext-note">
-    ※ 환경부·호주 환경기준 참고(0–4 µg/L 양호, 4–8 주의, 8 이상 위험)
+    ※ 호주 환경기준 참고(0–4 µg/L 양호, 4–8 주의, 8 이상 위험)
   </div>
 </div>
 
@@ -565,6 +565,17 @@ else:
         },
     )
 
+    fig.update_xaxes(
+        tickformat="%m-%d %H:%M",
+        ticklabelmode="period",
+        nticks=8,  # 너무 많지 않게 Plotly가 자동 간격 조절
+        rangeslider_visible=True,  # 날짜 범위 슬라이더
+    )
+    
+    fig.update_layout(
+        dragmode="pan",
+        hovermode="x unified",
+    )
     add_risk_bands_plotly(fig_fore, y_max)
 
     fig_fore.update_layout(
