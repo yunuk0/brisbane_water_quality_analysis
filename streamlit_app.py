@@ -467,7 +467,7 @@ with col_hero_side:
 # ============================================================
 # 2. 앞으로 7일 조류(녹조) 예보 – 10분 단위 라인 + 애니메이션
 # ============================================================
-st.markdown('<div class="section-title" style="font-size:1.3rem;">📆 Chlorophyll(조류) 예보[7일]</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title" style="font-size:1.3rem;">📆 조류량 예측 [7일]</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="info-text">센서 데이터를 학습한 예측 모델을 이용해, 약 10분 간격으로 예측한 조류 농도(µg/L)를 시간 흐름에 따라 보여줍니다.</div>',
     unsafe_allow_html=True,
