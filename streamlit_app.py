@@ -466,6 +466,92 @@ with col_hero_side:
 # ============================================================
 # 2. 앞으로 7일 조류(녹조) 예보 – 10분 단위 라인 + 애니메이션
 # ============================================================
+
+# ---------------------------
+# 왼편: 7일 예보 요약(일별 평균/위험 시간) UI
+# ---------------------------
+if forecast_df is None or forecast_df.empty:
+    st.info("예측 파일이 없어 일별 예보 요약을 표시할 수 없습니다.")
+else:
+    # 준비: 날짜별 집계
+    dff = forecast_df[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
+    dff = dff.sort_values("Timestamp").reset_index(drop=True)
+    dff["date"] = dff["Timestamp"].dt.date
+
+    # 일별 평균·최대
+    daily = dff.groupby("date")["Forecast_Chlorophyll_Kalman"].agg(["mean", "max"]).reset_index()
+    daily = daily.rename(columns={"mean": "mean_chl", "max": "max_chl"})
+
+    # 일별 최초 위험(>=8) 발생 시각 찾기
+    first_risk_times = []
+    for d in daily["date"]:
+        sub = dff[dff["date"] == d]
+        risky = sub[sub["Forecast_Chlorophyll_Kalman"] >= 8]
+        if not risky.empty:
+            first_time = risky["Timestamp"].iloc[0]
+            first_risk_times.append(first_time.strftime("%Y-%m-%d %H:%M"))
+        else:
+            first_risk_times.append("없음")
+
+    daily["first_risk_time"] = first_risk_times
+
+    # 일별 위험 레이블 (평균 기준)
+    def label_from_mean(x):
+        lab, emo, color, msg = classify_chl(x)
+        return lab
+
+    daily["risk_label"] = daily["mean_chl"].apply(lambda v: label_from_mean(v) if not pd.isna(v) else "정보 부족")
+
+    # 주간 요약 통계
+    week_mean = daily["mean_chl"].mean()
+    week_max = daily["max_chl"].max()
+    total_risk_points = (dff["Forecast_Chlorophyll_Kalman"] >= 8).sum()
+    days_with_risk = (daily["max_chl"] >= 8).sum()
+    day_highest_mean = daily.loc[daily["mean_chl"].idxmax(), "date"] if not daily["mean_chl"].isna().all() else None
+
+    # 레이아웃: 왼쪽 요약 / 오른쪽 차트 (기존 차트와 병렬로 사용 가능)
+    col_left, col_right = st.columns([1.1, 2.2])
+    with col_left:
+        st.markdown('<div class="small-title">예보(7일) 요약</div>', unsafe_allow_html=True)
+
+        # 주간 메트릭
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.metric("주간 평균", f"{week_mean:.1f} µg/L")
+        with m2:
+            st.metric("주간 최대", f"{week_max:.1f} µg/L")
+        with m3:
+            st.metric("위험 시점 수(≥8)", f"{int(total_risk_points)}")
+
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+        # 일별 테이블(간단)
+        display_df = daily.copy()
+        display_df["mean_chl"] = display_df["mean_chl"].map(lambda x: f"{x:.1f}" if not pd.isna(x) else "–")
+        display_df["max_chl"] = display_df["max_chl"].map(lambda x: f"{x:.1f}" if not pd.isna(x) else "–")
+        display_df = display_df[["date", "mean_chl", "max_chl", "risk_label", "first_risk_time"]]
+        display_df = display_df.rename(columns={
+            "date": "날짜",
+            "mean_chl": "평균(µg/L)",
+            "max_chl": "최대(µg/L)",
+            "risk_label": "위험등급(평균)",
+            "first_risk_time": "첫 위험 시각(≥8)"
+        })
+
+        st.dataframe(display_df, use_container_width=True, height=300)
+
+        # 추가 설명/하이라이트
+        st.markdown("<div class='info-text' style='margin-top:6px;'>"
+                    f"주간 최대 예보값: <b>{week_max:.1f} µg/L</b><br>"
+                    f"위험(≥8)로 예측된 시점이 있는 일수: <b>{int(days_with_risk)}일</b><br>"
+                    f"위험이 가장 예측된 날짜(평균 기준): <b>{day_highest_mean}</b>"
+                    "</div>",
+                    unsafe_allow_html=True)
+
+    # 오른쪽(col_right)에는 기존의 예보 차트(또는 다른 시각화)를 배치하면 자연스럽습니다.
+    # 예: st.plotly_chart(fig_fore, use_container_width=True) 를 여기로 옮겨도 됩니다.
+
+
 st.markdown('<div class="section-title" style="font-size:1.3rem;">📆 Chlorophyll(조류) 예보[7일]</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="info-text">센서 데이터를 학습한 예측 모델을 이용해, 약 10분 간격으로 예측한 조류 농도(µg/L)를 시간 흐름에 따라 보여줍니다.</div>',
@@ -544,7 +630,7 @@ else:
 
     # 프레임 슬라이더 라벨 조정
     frame_labels = {
-        i: ts.strftime("%Y-%m-%d %H:%M")
+        i: ts.strftime("%m-%d %H:%M")
         for i, ts in enumerate(base["Timestamp"])
     }
     if fig_fore.layout.sliders and len(fig_fore.layout.sliders) > 0:
