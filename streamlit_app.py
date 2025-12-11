@@ -24,11 +24,6 @@ st.markdown(
     background-repeat: no-repeat;
     color: #e5e7eb;
 }}
-</style>
-""",
-    unsafe_allow_html=True
-)
-
 
 /* 기본 padding: 모바일 기준 */
 .block-container {
@@ -37,6 +32,11 @@ st.markdown(
     padding-left: 1.2rem;
     padding-right: 1.2rem;
 }
+</style>
+""",
+    unsafe_allow_html=True
+)
+
 
 /* 큰 화면에서만 좌우 여유를 더 줌 */
 @media (min-width: 1200px) {
