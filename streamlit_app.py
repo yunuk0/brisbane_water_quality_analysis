@@ -25,18 +25,6 @@ st.markdown(
     100% { transform: translateY(-100px) scale(0.8); opacity: 0; }
 }
 
-.splash-icon {
-    position: fixed; /* 화면 고정 */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 80px; /* 아이콘 크기 */
-    color: #4fc3f7; /* 물 색상 */
-    z-index: 1000;
-    pointer-events: none; /* 클릭 방지 */
-    animation: water-splash 1.5s ease-out 0s 1; /* 1.5초 동안 한 번 실행 */
-}
-
 .stApp {
     background: radial-gradient(circle at top, #0b1020 0, #020617 55%, #020617 100%);
     color: #e5e7eb;
