@@ -15,12 +15,20 @@ st.set_page_config(
 )
 
 st.markdown(
-    """
+    f"""
 <style>
-.stApp {
-    background: radial-gradient(circle at top, #0b1020 0, #020617 55%, #020617 100%);
+.stApp {{
+    background-image: url('{current_bg}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #e5e7eb;
-}
+}}
+</style>
+""",
+    unsafe_allow_html=True
+)
+
 
 /* 기본 padding: 모바일 기준 */
 .block-container {
