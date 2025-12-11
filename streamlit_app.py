@@ -213,8 +213,8 @@ st.markdown(
     margin-bottom: 0.5rem;
 }
 .info-text {
-    font-size: 0.8rem;
-    opacity: 0.75;
+    font-size: 1.1rem;
+    opacity: 0.9;
 }
 
 /* 아주 작은 화면에서 표, 차트 여백 살짝 조정 */
