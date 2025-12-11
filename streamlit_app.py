@@ -519,213 +519,148 @@ with col_hero_side:
         )
 
 # ============================================================
-# 2. 앞으로 7일 조류(녹조) 예보 – Apple Weather 스타일 카드 (교체)
+# 📌 Apple Weather 스타일: 날짜 선택 → 해당 날짜 카드 표시
 # ============================================================
-if forecast_df is None or forecast_df.empty:
-    st.info("예측 파일(future_week_forecast.csv)을 찾을 수 없어, 7일 예보를 표시할 수 없습니다.")
-else:
-    # 준비: 날짜별 집계
-    dff = forecast_df[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
-    dff = dff.sort_values("Timestamp").reset_index(drop=True)
-    dff["date"] = dff["Timestamp"].dt.date
 
-    # 일별 평균·최대
-    daily = dff.groupby("date")["Forecast_Chlorophyll_Kalman"].agg(["mean", "max"]).reset_index()
-    daily = daily.rename(columns={"mean": "mean_chl", "max": "max_chl"})
+dff = dff.sort_values("Timestamp").reset_index(drop=True)
+dff["date"] = dff["Timestamp"].dt.date
 
-    # 일별 최초 위험(>=8) 발생 시각 찾기
-    first_risk_times = []
-    for d in daily["date"]:
-        sub = dff[dff["date"] == d]
-        risky = sub[sub["Forecast_Chlorophyll_Kalman"] >= 8]
-        if not risky.empty:
-            first_time = risky["Timestamp"].iloc[0]
-            first_risk_times.append(first_time.strftime("%H:%M"))
-        else:
-            first_risk_times.append("없음")
+# 일별 평균·최대
+daily = dff.groupby("date")["Forecast_Chlorophyll_Kalman"].agg(["mean", "max"]).reset_index()
+daily = daily.rename(columns={"mean": "mean_chl", "max": "max_chl"})
 
-    daily["first_risk_time"] = first_risk_times
+# 위험 기준
+def risk_icon(val):
+    lab, emo, color, msg = classify_chl(val)
+    return emo, lab
 
-    # 일별 위험 레이블 (평균 기준: classify_chl 사용)
-    def label_from_mean(v):
-        lab, emo, color, msg = classify_chl(v)
-        return lab, emo, color
+# 사용자가 날짜 선택
+selected_date = st.selectbox(
+    "📅 날짜 선택",
+    options=daily["date"],
+    format_func=lambda x: x.strftime("%Y-%m-%d")
+)
 
-    # 주간 요약 통계
-    week_mean = daily["mean_chl"].mean()
-    week_max = daily["max_chl"].max()
-    total_risk_points = (dff["Forecast_Chlorophyll_Kalman"] >= 8).sum()
-    days_with_risk = (daily["max_chl"] >= 8).sum()
-    day_highest_mean = daily.loc[daily["mean_chl"].idxmax(), "date"] if not daily["mean_chl"].isna().all() else None
+selected_row = daily[daily["date"] == selected_date].iloc[0]
 
-    # 레이아웃: 왼쪽 카드 / 오른쪽 차트
-    col_cards, col_graph = st.columns([1.1, 2.2])
+avg_chl = selected_row["mean_chl"]
+max_chl = selected_row["max_chl"]
+emo, label = risk_icon(avg_chl)
 
-    # --- 왼쪽: 7일 카드 + 주간 메트릭
-    with col_cards:
-        st.markdown('<div class="small-title">예보(7일) 요약</div>', unsafe_allow_html=True)
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.metric("주간 평균", f"{week_mean:.1f} µg/L")
-        with m2:
-            st.metric("주간 최대", f"{week_max:.1f} µg/L")
-        with m3:
-            st.metric("위험 시점 수(≥8)", f"{int(total_risk_points)}")
+# 카드 UI 표시 -----------------------------------------------------
+st.markdown(
+    f"""
+<div style="
+    background-color:#0f172a;
+    padding:1.2rem;
+    border-radius:1.2rem;
+    border:1px solid #1e293b;
+    width:100%;
+    margin-top:0.5rem;
+">
+    <div style="font-size:1rem; color:#cbd5e1; margin-bottom:0.4rem;">
+        {selected_date.strftime('%Y-%m-%d (%a)')}
+    </div>
 
-        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    <div style="font-size:2.1rem; margin-bottom:0.3rem;">
+        {emo} <span style="font-size:1.2rem; color:#94a3b8;">{label}</span>
+    </div>
 
-        # 카드 그리드 (세로 리스트 형태)
-        st.markdown('<div class="fw-grid">', unsafe_allow_html=True)
-        for _, row in daily.iterrows():
-            d_date = row["date"]
-            mean_val = row["mean_chl"]
-            max_val = row["max_chl"]
-            first_risk = row["first_risk_time"]
-
-            lab, emo, color = label_from_mean(mean_val)
-
-            # 날짜 텍스트: 월 일(요일)
-            try:
-                dt = pd.to_datetime(d_date)
-                date_label = dt.strftime("%m월 %d일 (%a)")
-            except Exception:
-                date_label = str(d_date)
-
-            card_html = f"""
-            <div class="fw-card">
-                <div class="date">{date_label}</div>
-                <div class="risk" style="color:{color};">{emo} {lab}</div>
-                <div class="stats">
-                    평균: <b>{mean_val:.1f} µg/L</b> · 최대: <b>{max_val:.1f} µg/L</b><br>
-                    첫 위험 시각: <span class="fw-badge">{first_risk}</span>
-                </div>
-            </div>
-            """
-            st.markdown(card_html, unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # 하단 요약 문구
-        st.markdown(
-            f"""<div class="info-text" style="margin-top:8px;">
-            주간 최대 예보값: <b>{week_max:.1f} µg/L</b><br>
-            위험(≥8)로 예측된 일수: <b>{int(days_with_risk)}일</b><br>
-            위험 평균이 가장 높은 날짜: <b>{day_highest_mean}</b>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-
-    # --- 오른쪽: 기존 예보 애니메이션 그래프 (col_graph)
-    with col_graph:
-        st.markdown('<div class="section-title" style="font-size:1.1rem;">📈 예보 시계열 그래프</div>', unsafe_allow_html=True)
-
-        base = forecast_df[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
-        base = base.sort_values("Timestamp").reset_index(drop=True)
-
-        frames = []
-        n = len(base)
-        # sample frames to avoid huge anim length if extremely granular
-        # but keep original method to preserve behavior
-        for i in range(n):
-            tmp = base.iloc[: i + 1].copy()
-            tmp["frame"] = i
-            frames.append(tmp)
-        anim_df = pd.concat(frames, ignore_index=True)
-
-        chl_max_fore = base["Forecast_Chlorophyll_Kalman"].max()
-        y_max = chl_max_fore if chl_max_fore >= 10 else 10
-
-        ANIM_SPEED_MS = 1
-
-        fig_fore = px.line(
-            anim_df,
-            x="Timestamp",
-            y="Forecast_Chlorophyll_Kalman",
-            animation_frame="frame",
-            range_x=[base["Timestamp"].min(), base["Timestamp"].max()],
-            range_y=[0, y_max],
-            labels={
-                "Timestamp": "시간",
-                "Forecast_Chlorophyll_Kalman": "예상 클로로필 (µg/L)",
-                "frame": "예측 진행",
-            },
-        )
-
-        add_risk_bands_plotly(fig_fore, y_max)
-
-        fig_fore.update_layout(
-            legend_title_text="",
-            height=520,
-            margin=dict(l=10, r=10, t=40, b=10),
-            showlegend=False,
-            # 대시보드 배경과 맞추기
-            paper_bgcolor="#020617",
-            plot_bgcolor="#020617",
-            font=dict(color="#e5e7eb"),
-            xaxis=dict(
-                gridcolor="rgba(148,163,184,0.15)",
-                zerolinecolor="rgba(148,163,184,0.2)",
-            ),
-            yaxis=dict(
-                gridcolor="rgba(148,163,184,0.15)",
-                zerolinecolor="rgba(148,163,184,0.2)",
-            ),
-        )
-
-        # 재생/멈춤 버튼 위치 & 속도 조절
-        if fig_fore.layout.updatemenus and len(fig_fore.layout.updatemenus) > 0:
-            um = fig_fore.layout.updatemenus[0]
-            um.x = 0
-            um.xanchor = "left"
-            um.y = 1.05
-            um.yanchor = "bottom"
-            um.pad = dict(l=0, r=0, t=0, b=0)
-            for btn in um.buttons:
-                if "args" in btn and len(btn["args"]) > 1:
-                    args1 = btn["args"][1]
-                    if "frame" in args1:
-                        args1["frame"]["duration"] = ANIM_SPEED_MS
-                    if "transition" in args1:
-                        args1["transition"]["duration"] = int(ANIM_SPEED_MS / 2)
-
-        # 프레임 슬라이더 라벨 조정
-        frame_labels = {
-            i: ts.strftime("%m-%d %H:%M")
-            for i, ts in enumerate(base["Timestamp"])
-        }
-        if fig_fore.layout.sliders and len(fig_fore.layout.sliders) > 0:
-            slider = fig_fore.layout.sliders[0]
-            slider.x = 0
-            slider.xanchor = "left"
-            slider.len = 1.0
-            slider.pad = dict(l=0, r=0, t=50, b=0)
-            for i, step in enumerate(slider["steps"]):
-                step["label"] = frame_labels.get(i, step["label"])
-
-        st.plotly_chart(fig_fore, use_container_width=True)
-
-        # 예보 요약 메트릭 (그래프 아래)
-        c1, c2, c3 = st.columns(3)
-        vals = base["Forecast_Chlorophyll_Kalman"]
-        with c1:
-            st.metric("예보 평균", f"{vals.mean():.1f} µg/L")
-        with c2:
-            st.metric("예보 최대", f"{vals.max():.1f} µg/L")
-        with c3:
-            high_points = (vals >= 8).sum()
-            st.metric("위험 구간(≥8) 시점 수", f"{int(high_points)}개")
-
-        if max_future_time is not None:
-            lab, emo, _, _ = classify_chl(max_future_value)
-            t_txt = max_future_time.strftime("%Y-%m-%d %H:%M")
-            st.markdown(
-                f"""
-<div class="info-text" style="margin-top:0.4rem;">
-  가장 조류 농도가 높게 예보된 시점은 <b>{t_txt}</b>이며,  
-  예측값은 약 <b>{max_future_value:.1f} µg/L</b> ({emo} {lab}) 입니다.
+    <div style="font-size:1.05rem; color:#e2e8f0; margin-top:0.4rem;">
+        평균 농도: <b style="color:#38bdf8;">{avg_chl:.1f} µg/L</b><br>
+        최대 농도: <b style="color:#f472b6;">{max_chl:.1f} µg/L</b>
+    </div>
 </div>
-""",
-                unsafe_allow_html=True,
-            )
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+
+# ============================================================
+# 예보 그래프 (7일 전체 + 날짜/시간 라벨 개선)
+# ============================================================
+
+st.markdown('<div class="section-title" style="font-size:1.3rem;">📈 Chlorophyll(조류) 예보</div>', unsafe_allow_html=True)
+
+base = forecast_df[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
+base = base.sort_values("Timestamp").reset_index(drop=True)
+
+frames = []
+n = len(base)
+
+for i in range(n):
+    tmp = base.iloc[: i + 1].copy()
+    tmp["frame"] = i
+    frames.append(tmp)
+
+anim_df = pd.concat(frames, ignore_index=True)
+
+chl_max_fore = base["Forecast_Chlorophyll_Kalman"].max()
+y_max = chl_max_fore if chl_max_fore >= 10 else 10
+
+ANIM_SPEED_MS = 1
+
+fig_fore = px.line(
+    anim_df,
+    x="Timestamp",
+    y="Forecast_Chlorophyll_Kalman",
+    animation_frame="frame",
+    range_x=[base["Timestamp"].min(), base["Timestamp"].max()],
+    range_y=[0, y_max],
+    labels={
+        "Timestamp": "시간",
+        "Forecast_Chlorophyll_Kalman": "예상 클로로필 (µg/L)",
+        "frame": "예측 진행",
+    },
+)
+
+add_risk_bands_plotly(fig_fore, y_max)
+
+# 슬라이더 날짜/시간 라벨 개선 ---------------------------------------------
+frame_labels = {
+    i: ts.strftime("%m-%d %H:%M")
+    for i, ts in enumerate(base["Timestamp"])
+}
+
+if fig_fore.layout.sliders and len(fig_fore.layout.sliders) > 0:
+    slider = fig_fore.layout.sliders[0]
+    slider.x = 0
+    slider.xanchor = "left"
+    slider.len = 1.0
+    slider.pad = dict(l=0, r=0, t=50, b=0)
+    for i, step in enumerate(slider["steps"]):
+        step["label"] = frame_labels.get(i, step["label"])
+
+# 버튼 위치 재정렬
+if fig_fore.layout.updatemenus and len(fig_fore.layout.updatemenus) > 0:
+    um = fig_fore.layout.updatemenus[0]
+    um.x = 0
+    um.xanchor = "left"
+    um.y = 1.01
+    um.yanchor = "bottom"
+    um.pad = dict(l=0, r=0, t=0, b=0)
+    for btn in um.buttons:
+        if "args" in btn and len(btn["args"]) > 1:
+            args1 = btn["args"][1]
+            if "frame" in args1:
+                args1["frame"]["duration"] = ANIM_SPEED_MS
+            if "transition" in args1:
+                args1["transition"]["duration"] = int(ANIM_SPEED_MS / 2)
+
+# 그래프 스타일
+fig_fore.update_layout(
+    height=360,
+    margin=dict(l=10, r=10, t=40, b=10),
+    showlegend=False,
+    paper_bgcolor="#020617",
+    plot_bgcolor="#020617",
+    font=dict(color="#e5e7eb"),
+    xaxis=dict(gridcolor="rgba(148,163,184,0.15)"),
+    yaxis=dict(gridcolor="rgba(148,163,184,0.15)")
+)
+
+st.plotly_chart(fig_fore, use_container_width=True)
 
 # ============================================================
 # 3. 데이터 자세히 보기
