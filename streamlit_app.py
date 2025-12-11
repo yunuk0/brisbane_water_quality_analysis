@@ -1,3 +1,4 @@
+# streamlit_app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,78 +6,174 @@ from pathlib import Path
 import plotly.express as px
 import datetime
 import base64
+import mimetypes
 
 # ============================================================
-# 배경 이미지 선택
+# 기본 설정
+# ============================================================
+st.set_page_config(
+    page_title="브리즈번 수질 알리미",
+    page_icon=":droplet:",
+    layout="wide",
+)
+
+# ============================================================
+# 데이터 로드 (data/df_final.csv 사용)
+# ============================================================
+@st.cache_data
+def get_water_data():
+    DATA_FILENAME = Path(__file__).parent / "data" / "df_final.csv"
+    if not DATA_FILENAME.exists():
+        st.error(f"데이터 파일을 찾을 수 없습니다: {DATA_FILENAME}")
+        return pd.DataFrame()
+    df = pd.read_csv(DATA_FILENAME)
+    if "Timestamp" in df.columns:
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+        df["date"] = df["Timestamp"].dt.date
+    elif "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+    return df
+
+
+@st.cache_data
+def load_future_forecast():
+    path = Path(__file__).parent / "data" / "future_week_forecast.csv"
+    if not path.exists():
+        return None
+    df_fore = pd.read_csv(path, parse_dates=["Timestamp"])
+    if "Forecast_Chlorophyll_Kalman" not in df_fore.columns:
+        return None
+    df_fore = df_fore.sort_values("Timestamp").reset_index(drop=True)
+    return df_fore
+
+
+df = get_water_data()
+forecast_df = load_future_forecast()
+
+# ============================================================
+# 도메인 헬퍼 (정의는 데이터 로드 뒤에 있어야 안전)
+# ============================================================
+def classify_chl(value: float):
+    if pd.isna(value):
+        return "정보 부족", "⚪", "#9ca3af", "데이터가 부족해 정확한 상태 진단이 어렵습니다."
+    if value < 4:
+        return "좋음", "🟢", "#22c55e", "평상 수준으로, 산책·레저 활동에 비교적 안전한 상태입니다."
+    if value < 8:
+        return "주의", "🟡", "#eab308", "조류(녹조) 농도가 다소 높아진 상태입니다. 기상·강우에 따라 변동이 클 수 있습니다."
+    return "위험", "🔴", "#ef4444", "조류(녹조) 농도가 높은 편입니다. 레저 활동 전 공식 안내를 꼭 확인해 주세요."
+
+
+def get_last_valid(df_local: pd.DataFrame, col: str):
+    if df_local is None or df_local.empty:
+        return np.nan
+    if col not in df_local.columns:
+        return np.nan
+    return df_local[col].dropna().iloc[-1] if df_local[col].notna().any() else np.nan
+
+
+def add_risk_bands_plotly(fig, y_max):
+    fig.add_hrect(y0=0, y1=4,  line_width=0, fillcolor="#d0f0c0", opacity=0.25)
+    fig.add_hrect(y0=4, y1=8,  line_width=0, fillcolor="#fff3b0", opacity=0.35)
+    fig.add_hrect(y0=8, y1=y_max, line_width=0, fillcolor="#ffc9c9", opacity=0.25)
+    fig.add_hline(y=4, line_dash="dash", line_color="orange", line_width=1)
+    fig.add_hline(y=8, line_dash="dash", line_color="red",    line_width=1)
+
+
+# ============================================================
+# 배경 이미지 (static 폴더) → Base64로 읽어 CSS에 인라인 삽입
+# - static/ 에 bg_good.jpg, bg_warning.jpg, bg_danger.jpg, bg_unknown.jpg 파일 있어야 함
 # ============================================================
 STATIC_DIR = Path(__file__).parent / "static"
+img_good = STATIC_DIR / "bg_good.jpg"
+img_warning = STATIC_DIR / "bg_warning.jpg"
+img_danger = STATIC_DIR / "bg_danger.jpg"
+img_unknown = STATIC_DIR / "bg_unknown.jpg"
 
-bg_good = "/static/bg_good.jpg"
-bg_warning = "/static/bg_warning.jpg"
-bg_danger = "/static/bg_danger.jpg"
-bg_unknown = "/static/bg_unknown.jpg"
+def get_base64_image(path: Path):
+    if not path.exists():
+        return None
+    mime_type, _ = mimetypes.guess_type(str(path))
+    mime_type = mime_type or "image/jpeg"
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    return f"data:{mime_type};base64,{b64}"
 
-def pick_background_by_status(status: str):
-    if status == "좋음":
-        return bg_good
-    elif status == "주의":
-        return bg_warning
-    elif status == "위험":
-        return bg_danger
-    else:
-        return bg_unknown
+# 안전하게 현재 chlorophyll 값으로 상태 판정 후 배경 선택
+cur_chl = get_last_valid(df, "Chlorophyll_Kalman")
+status_label, status_emoji, status_color, status_msg = classify_chl(cur_chl)
 
+if status_label == "좋음":
+    chosen_img = img_good
+elif status_label == "주의":
+    chosen_img = img_warning
+elif status_label == "위험":
+    chosen_img = img_danger
+else:
+    chosen_img = img_unknown
+
+bg_data_uri = get_base64_image(chosen_img)
+# 만약 파일이 없으면 bg_data_uri는 None → 기본 배경색 사용
 
 # ============================================================
-# 현재 상태 진단 → 배경 선택
+# CSS 스타일 삽입 (기존 스타일 유지하되 배경은 data URI 사용)
 # ============================================================
-chl_value = get_last_valid(df, "Chlorophyll_Kalman") if not df.empty else np.nan
-status_label, icon, color, desc = classify_chl(chl_value)
-current_bg = pick_background_by_status(status_label)
+if bg_data_uri:
+    bg_css_url = bg_data_uri
+else:
+    # fallback color background
+    bg_css_url = None
 
-# ============================================================
-# CSS 스타일 삽입
-# ============================================================
-st.markdown(
-    f"""
+css_block = """
 <style>
-/* 전체 배경 */
+"""
+
+if bg_css_url:
+    css_block += f"""
 .stApp {{
-    background-image: url('{current_bg}');
+    background-image: url("{bg_css_url}");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     color: #e5e7eb;
 }}
+"""
+else:
+    css_block += """
+.stApp {
+    background-color: #020617;
+    color: #e5e7eb;
+}
+"""
 
+css_block += """
 /* 기본 padding: 모바일 기준 */
-.block-container {{
+.block-container {
     padding-top: 3.5rem;
     padding-bottom: 2rem;
     padding-left: 1.2rem;
     padding-right: 1.2rem;
-}}
+}
 
 /* 큰 화면에서만 좌우 여유를 더 줌 */
-@media (min-width: 1200px) {{
-  .block-container {{
+@media (min-width: 1200px) {
+  .block-container {
       padding-left: 5rem;
       padding-right: 5rem;
-  }}
-}}
+  }
+}
 
-.main-title {{
+.main-title {
     font-size: clamp(22px, 2.3vw, 30px);
     font-weight: 800;
     margin-bottom: 0.25rem;
     color: #f9fafb;
-}}
-.sub-title {{
+}
+.sub-title {
     font-size: 14px;
     opacity: 0.8;
     margin-bottom: 1rem;
-}}
-.tag-pill {{
+}
+.tag-pill {
     display: inline-block;
     padding: 0.15rem 0.55rem;
     border-radius: 999px;
@@ -85,17 +182,17 @@ st.markdown(
     background-color: rgba(15, 23, 42, 0.8);
     color: #e5e7eb;
     border: 1px solid rgba(148, 163, 184, 0.4);
-}}
+}
 
 /* =========================================================
    메인 카드 (모바일 = 1단, 데스크톱 = 2단)
    ========================================================= */
-.hero-card {{
+.hero-card {
     padding: 1.2rem 1.4rem;
     border-radius: 1.3rem;
-    background: radial-gradient(circle at top, #1d2752, #020617);
+    background: radial-gradient(circle at top, rgba(29,39,82,0.75), rgba(2,6,23,0.6));
     color: #e5e7eb;
-    box-shadow: 0 20px 40px rgba(15, 60, 42, 0.9);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35);
 
     /* 모바일 기본: 세로 1단 */
     display: grid;
@@ -104,76 +201,80 @@ st.markdown(
 
     min-height: 260px;
     height: auto;
-}}
+}
 
 /* 데스크톱 이상에서만 좌/우 2열 */
-@media (min-width: 900px) {{
-  .hero-card {{
+@media (min-width: 900px) {
+  .hero-card {
       grid-template-columns: 2fr 1.1fr;
       column-gap: 2rem;
-  }}
-}}
+  }
+}
 
-.hero-left {{
+/* 왼쪽 열: 텍스트 블록 세로 중앙 정렬 */
+.hero-left {
     display: flex;
     flex-direction: column;
     justify-content: center;
-}}
+}
 
-.hero-title {{
+.hero-title {
     font-size: 0.85rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     opacity: 0.7;
-}}
-.hero-location {{
+}
+.hero-location {
     font-size: 1.1rem;
     margin-top: 0.2rem;
     font-weight: 600;
-}}
+}
 
-.hero-main-row {{
+/* 수치 한 줄 */
+.hero-main-row {
     display: flex;
     align-items: flex-end;
-    flex-wrap: wrap;
+    flex-wrap: wrap;           /* 좁은 화면에서 줄바꿈 허용 */
     gap: 0.2rem;
     margin-top: 0.5rem;
-}}
-.hero-main-value {{
+}
+.hero-main-value {
     font-size: clamp(2.4rem, 6vw, 3.5rem);
     font-weight: 800;
     line-height: 1.05;
-}}
-.hero-main-unit {{
+}
+.hero-main-unit {
     font-size: 1.1rem;
     opacity: 0.8;
     margin-bottom: 0.3rem;
-}}
+}
 
-.hero-label {{
+.hero-label {
     font-size: 0.85rem;
     opacity: 0.75;
     margin-top: 0.4rem;
     margin-bottom: 0.05rem;
-}}
-.hero-subtext {{
+}
+.hero-subtext {
     font-size: 0.78rem;
     opacity: 0.8;
     margin-top: 0rem;
-}}
-.hero-subtext-note {{
+}
+.hero-subtext-note {
     font-size: 0.75rem;
     opacity: 0.6;
     margin-top: 0.2rem;
-}}
+}
 
-.hero-status-box {{
+/* 오른쪽 열: 상태 박스 */
+.hero-status-box {
     display: flex;
     align-items: center;
     justify-content: center;
-}}
+}
 
-.hero-badge {{
+/* 상태 배지 (좋음/주의/위험) – 반응형 캡슐 박스 */
+.hero-badge {
     width: 100%;
     max-width: 420px;
     height: 100%;
@@ -189,142 +290,79 @@ st.markdown(
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-}}
-.hero-badge span:first-child {{
+}
+.hero-badge span:first-child {
     font-size: 1.4rem;
-}}
-.hero-badge-label {{
+}
+.hero-badge-label {
     font-size: clamp(2.2rem, 5vw, 4rem);
     font-weight: 700;
-}}
+}
 
-@media (max-width: 899px) {{
-  .hero-status-box {{
+/* 모바일에서 배지 최소 높이 확보 */
+@media (max-width: 899px) {
+  .hero-status-box {
       min-height: 140px;
-  }}
-}}
+  }
+}
 
-.chip-box {{
+/* chip 카드들 */
+.chip-box {
     padding: 0.75rem 0.9rem;
     border-radius: 1rem;
     background-color: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(148, 163, 184, 0.35);
     font-size: 0.78rem;
     margin-bottom: 0.4rem;
-}}
-.chip-label {{
+}
+.chip-label {
     opacity: 0.7;
     font-size: 0.76rem;
-}}
-.chip-value {{
+}
+.chip-value {
     font-size: 1.05rem;
     font-weight: 600;
     margin-top: 0.2rem;
-}}
-.small-title {{
+}
+.small-title {
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
     margin-top: 0.8rem;
-}}
-.section-title {{
+}
+.section-title {
     font-size: 1.0rem;
     font-weight: 700;
     margin-top: 1.2rem;
     margin-bottom: 0.5rem;
-}}
-.info-text {{
+}
+.info-text {
     font-size: 0.9rem;
     opacity: 0.8;
-}}
+}
 
-@media (max-width: 600px) {{
-  .section-title {{
+@media (max-width: 600px) {
+  .section-title {
       margin-top: 1rem;
-  }}
-}}
+  }
+}
 
-div[data-testid="stMetricLabel"] {{
-    color: #f9fafb !important;
-}}
-div[data-testid="stMetricValue"] {{
-    color: #f9fafb !important;
-}}
-div[data-testid="stMetricDelta"] {{
-    color: #f97316 !important;
-}}
-
+div[data-testid="stMetricLabel"] {
+    color: #f9fafb !important;   /* 라벨: 예보 평균, 예보 최대, 위험 구간 등 */
+}
+div[data-testid="stMetricValue"] {
+    color: #f9fafb !important;   /* 값 숫자 */
+}
+div[data-testid="stMetricDelta"] {
+    color: #f97316 !important;   /* 증감(▲/▼) 사용하는 경우 */
+}
 </style>
-""",
-    unsafe_allow_html=True
-)
+"""
+
+st.markdown(css_block, unsafe_allow_html=True)
 
 # ============================================================
-# 데이터 로드
-# ============================================================
-@st.cache_data
-def get_water_data():
-    DATA_FILENAME = Path(__file__).parent / "data" / "df_final.csv"
-    df = pd.read_csv(DATA_FILENAME)
-
-    if "Timestamp" in df.columns:
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"])
-        df["date"] = df["Timestamp"].dt.date
-    elif "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"]).dt.date
-
-    return df
-
-
-@st.cache_data
-def load_future_forecast():
-    """
-    1주일 예측 CSV (10분 단위) 로드
-    컬럼: Timestamp, Forecast_Chlorophyll_Kalman
-    """
-    path = Path(__file__).parent / "data" / "future_week_forecast.csv"
-    if not path.exists():
-        return None
-
-    df_fore = pd.read_csv(path, parse_dates=["Timestamp"])
-    if "Forecast_Chlorophyll_Kalman" not in df_fore.columns:
-        return None
-
-    df_fore = df_fore.sort_values("Timestamp").reset_index(drop=True)
-    return df_fore
-
-
-df = get_water_data()
-forecast_df = load_future_forecast()
-
-# ============================================================
-# 도메인 헬퍼
-# ============================================================
-def classify_chl(value: float):
-    if pd.isna(value):
-        return "정보 부족", "⚪", "#9ca3af", "데이터가 부족해 정확한 상태 진단이 어렵습니다."
-    if value < 4:
-        return "좋음", "🟢", "#22c55e", "평상 수준으로, 산책·레저 활동에 비교적 안전한 상태입니다."
-    if value < 8:
-        return "주의", "🟡", "#eab308", "조류(녹조) 농도가 다소 높아진 상태입니다. 기상·강우에 따라 변동이 클 수 있습니다."
-    return "위험", "🔴", "#ef4444", "조류(녹조) 농도가 높은 편입니다. 레저 활동 전 공식 안내를 꼭 확인해 주세요."
-
-
-def get_last_valid(df: pd.DataFrame, col: str):
-    if col not in df.columns:
-        return np.nan
-    return df[col].dropna().iloc[-1] if df[col].notna().any() else np.nan
-
-
-def add_risk_bands_plotly(fig, y_max):
-    fig.add_hrect(y0=0, y1=4,  line_width=0, fillcolor="#d0f0c0", opacity=0.25)
-    fig.add_hrect(y0=4, y1=8,  line_width=0, fillcolor="#fff3b0", opacity=0.35)
-    fig.add_hrect(y0=8, y1=y_max, line_width=0, fillcolor="#ffc9c9", opacity=0.25)
-    fig.add_hline(y=4, line_dash="dash", line_color="orange", line_width=1)
-    fig.add_hline(y=8, line_dash="dash", line_color="red",    line_width=1)
-
-# ============================================================
-# 기본 정보 계산
+# 기본 정보 계산 (너 기존 로직 거의 그대로)
 # ============================================================
 if "Timestamp" in df.columns:
     df = df.sort_values("Timestamp")
@@ -334,10 +372,10 @@ if "Timestamp" in df.columns:
 
     last_24h_df = df[df["Timestamp"] >= latest_time - pd.Timedelta(hours=24)].copy()
 else:
-    latest_row = df.iloc[-1]
-    latest_time = None
-    today_date = df["date"].iloc[-1] if "date" in df.columns else None
-    last_24h_df = df.copy()
+    latest_row = df.iloc[-1] if not df.empty else None
+    latest_time = latest_row["Timestamp"] if latest_row is not None and "Timestamp" in latest_row.index else None
+    today_date = df["date"].iloc[-1] if "date" in df.columns and not df.empty else None
+    last_24h_df = df.copy() if not df.empty else df
 
 cur_chl = get_last_valid(df, "Chlorophyll_Kalman")
 cur_temp = get_last_valid(df, "Temperature_Kalman")
@@ -370,7 +408,6 @@ if forecast_df is not None and not forecast_df.empty:
 # ============================================================
 # 헤더
 # ============================================================
-
 st.markdown(
     '<div class="main-title">브리즈번 수질 알리미</div>',
     unsafe_allow_html=True,
@@ -487,6 +524,7 @@ with col_hero_side:
 
 # ============================================================
 # 2. 앞으로 7일 조류(녹조) 예보 – 10분 단위 라인 + 애니메이션
+# (원래 코드 유지)
 # ============================================================
 st.markdown('<div class="section-title" style="font-size:1.3rem;">📆 이번주 조류량 예측</div>', unsafe_allow_html=True)
 st.markdown(
@@ -616,19 +654,20 @@ with st.expander("📊 전체 수집 데이터 보기", expanded=False):
         unsafe_allow_html=True,
     )
 
-    if "date" in df.columns and today_date is not None:
+    if not df.empty and "date" in df.columns and today_date is not None:
         recent_start = today_date - datetime.timedelta(days=2)
         recent_mask = df["date"] >= recent_start
         df_recent = df[recent_mask].copy()
     else:
-        df_recent = df.tail(500).copy()
+        df_recent = df.tail(500).copy() if not df.empty else df
 
     st.dataframe(df_recent.tail(300), use_container_width=True)
 
-    csv_all = df.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        label="📥 전체 수질 데이터 다운로드 (CSV)",
-        data=csv_all,
-        file_name="brisbane_water_all.csv",
-        mime="text/csv",
-    )
+    if not df.empty:
+        csv_all = df.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label="📥 전체 수질 데이터 다운로드 (CSV)",
+            data=csv_all,
+            file_name="brisbane_water_all.csv",
+            mime="text/csv",
+        )
