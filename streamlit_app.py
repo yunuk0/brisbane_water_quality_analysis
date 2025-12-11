@@ -351,15 +351,8 @@ if forecast_df is not None and not forecast_df.empty:
 # 헤더
 # ============================================================
 
-# === [여기에 추가합니다] ===
 st.markdown('<div class="splash-icon">💧</div>', unsafe_allow_html=True)
-# ========================
 
-st.markdown(
-    '<div class="main-title">브리즈번 수질 알리미</div>',
-    unsafe_allow_html=True,
-)
-# ... (이후 헤더 코드)
 st.markdown(
     '<div class="main-title">브리즈번 수질 알리미</div>',
     unsafe_allow_html=True,
