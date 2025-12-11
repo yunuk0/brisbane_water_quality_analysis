@@ -17,7 +17,7 @@ st.set_page_config(
 st.markdown(
     f"""
 <style>
-/* 전체 배경 */
+/* 전체 배경 (이미지 URL을 current_bg로 넣어 사용) */
 .stApp {{
     background-image: url('{current_bg}');
     background-size: cover;
@@ -34,7 +34,7 @@ st.markdown(
     padding-right: 1.2rem;
 }}
 
-/* 큰 화면에서만 좌우 padding 증가 */
+/* 큰 화면에서만 좌우 여유를 더 줌 */
 @media (min-width: 1200px) {{
   .block-container {{
       padding-left: 5rem;
@@ -48,10 +48,28 @@ st.markdown(
     margin-bottom: 0.25rem;
     color: #f9fafb;
 }}
-
 .sub-title {{
     font-size: 14px;
-    opaci
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}}
+.tag-pill {{
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+    background-color: rgba(15, 23, 42, 0.8);
+    color: #e5e7eb;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}}
+
+/* (여기에 나머지 CSS 규칙을 그대로 붙여넣으세요) */
+
+</style>
+""",
+    unsafe_allow_html=True
+)
 
 /* =========================================================
    메인 카드 (모바일 = 1단, 데스크톱 = 2단)
