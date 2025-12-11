@@ -570,9 +570,9 @@ else:
     ticklabelmode="period",
     nticks=8,                # 화면에 표시할 x축 라벨 개수(Plotly가 자동 간격으로 배치)
     rangeslider_visible=True # 아래에 범위 슬라이더 표시 (줌/영역선택 가능)
-)
+    )
 
-fig_fore.update_layout(
+    fig_fore.update_layout(
     dragmode="pan",          # 드래그로 패닝(이동) 모드
     hovermode="x unified",   # x축 기준으로 툴팁을 통합 표시
     xaxis=dict(
@@ -585,7 +585,7 @@ fig_fore.update_layout(
             ])
         ),
     )
-)    
+    
     add_risk_bands_plotly(fig_fore, y_max)
 
     fig_fore.update_layout(
