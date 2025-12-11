@@ -585,7 +585,7 @@ else:
             ])
         ),
     )
-    
+)    
     add_risk_bands_plotly(fig_fore, y_max)
 
     fig_fore.update_layout(
