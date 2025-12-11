@@ -584,7 +584,7 @@ else:
             gridcolor="rgba(148,163,184,0.15)",
             zerolinecolor="rgba(148,163,184,0.2)",
         ),
-    )
+        )
 
     # 재생/멈춤 버튼 위치 & 속도 조절
     if fig_fore.layout.updatemenus and len(fig_fore.layout.updatemenus) > 0:
