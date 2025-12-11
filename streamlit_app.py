@@ -573,19 +573,20 @@ else:
     )
 
     fig_fore.update_layout(
-    dragmode="pan",          # 드래그로 패닝(이동) 모드
-    hovermode="x unified",   # x축 기준으로 툴팁을 통합 표시
-    xaxis=dict(
-        rangeselector=dict(  # 자주 쓰는 범위 버튼(선택사항)
-            buttons=list([
-                dict(count=6, label="6h", step="hour", stepmode="backward"),
-                dict(count=1, label="1d", step="day", stepmode="backward"),
-                dict(count=3, label="3d", step="day", stepmode="backward"),
-                dict(step="all")
-            ])
-        ),
+        dragmode="pan",          # 드래그로 패닝(이동) 모드
+        hovermode="x unified",   # x축 기준으로 툴팁을 통합 표시
+        xaxis=dict(
+            rangeselector=dict(  # 자주 쓰는 범위 버튼(선택사항)
+                buttons=list([
+                    dict(count=6, label="6h", step="hour", stepmode="backward"),
+                    dict(count=1, label="1d", step="day", stepmode="backward"),
+                    dict(count=3, label="3d", step="day", stepmode="backward"),
+                    dict(step="all")
+                ])
+            )
+        )
     )
-))    
+
     add_risk_bands_plotly(fig_fore, y_max)
 
     fig_fore.update_layout(
