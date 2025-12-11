@@ -524,7 +524,7 @@ with col_hero_side:
 
 # ============================================================
 # 2. 앞으로 7일 조류(녹조) 예보 – 10분 단위 라인 + 애니메이션
-# (원래 코드 유지)
+# (원래 코드 유지 + X축 가독성 향상 + 날짜 필터 추가)
 # ============================================================
 st.markdown('<div class="section-title" style="font-size:1.3rem;">📆 이번주 조류량 예측</div>', unsafe_allow_html=True)
 st.markdown(
@@ -535,9 +535,30 @@ st.markdown(
 if forecast_df is None or forecast_df.empty:
     st.info("예측 파일(future_week_forecast.csv)을 찾을 수 없어, 7일 예보를 표시할 수 없습니다.")
 else:
-    base = forecast_df[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
+    # 날짜 필터 UI 추가 (애니메이션 깨지지 않는 방식)
+    min_t = forecast_df["Timestamp"].min()
+    max_t = forecast_df["Timestamp"].max()
+
+    colA, colB = st.columns([1, 1])
+    with colA:
+        start_filter = st.date_input("시작 날짜", min_t.date())
+    with colB:
+        end_filter = st.date_input("끝 날짜", max_t.date())
+
+    # 필터 적용
+    filtered = forecast_df[
+        (forecast_df["Timestamp"] >= pd.Timestamp(start_filter))
+        & (forecast_df["Timestamp"] <= pd.Timestamp(end_filter) + pd.Timedelta(days=1))
+    ]
+
+    if filtered.empty:
+        st.warning("선택한 날짜 구간에 데이터가 없습니다.")
+        st.stop()
+
+    base = filtered[["Timestamp", "Forecast_Chlorophyll_Kalman"]].dropna().copy()
     base = base.sort_values("Timestamp").reset_index(drop=True)
 
+    # 애니메이션 프레임 구성
     frames = []
     n = len(base)
     for i in range(n):
@@ -565,18 +586,21 @@ else:
         },
     )
 
+    # 위험 구간 밴드 추가
     add_risk_bands_plotly(fig_fore, y_max)
 
+    # 그래프 스타일 수정 + X축 tickformat 개선
     fig_fore.update_layout(
         legend_title_text="",
         height=360,
         margin=dict(l=10, r=10, t=40, b=10),
         showlegend=False,
-        # 대시보드 배경과 맞추기
         paper_bgcolor="#020617",
         plot_bgcolor="#020617",
         font=dict(color="#e5e7eb"),
         xaxis=dict(
+            tickformat="%m-%d %H:%M",                 # ← ★ 시각 가독성 강화
+            ticklabelmode="period",
             gridcolor="rgba(148,163,184,0.15)",
             zerolinecolor="rgba(148,163,184,0.2)",
         ),
@@ -584,9 +608,9 @@ else:
             gridcolor="rgba(148,163,184,0.15)",
             zerolinecolor="rgba(148,163,184,0.2)",
         ),
-        )
+    )
 
-    # 재생/멈춤 버튼 위치 & 속도 조절
+    # 애니메이션 속도 조절
     if fig_fore.layout.updatemenus and len(fig_fore.layout.updatemenus) > 0:
         um = fig_fore.layout.updatemenus[0]
         um.x = 0
@@ -602,11 +626,8 @@ else:
                 if "transition" in args1:
                     args1["transition"]["duration"] = int(ANIM_SPEED_MS / 2)
 
-    # 프레임 슬라이더 라벨 조정
-    frame_labels = {
-        i: ts.strftime("%m-%d %H:%M")
-        for i, ts in enumerate(base["Timestamp"])
-    }
+    # 슬라이더 라벨을 날짜/시간으로 표시
+    frame_labels = {i: ts.strftime("%m-%d %H:%M") for i, ts in enumerate(base["Timestamp"])}
     if fig_fore.layout.sliders and len(fig_fore.layout.sliders) > 0:
         slider = fig_fore.layout.sliders[0]
         slider.x = 0
@@ -618,7 +639,7 @@ else:
 
     st.plotly_chart(fig_fore, use_container_width=True)
 
-    # 예보 요약 메트릭
+    # 메트릭 박스
     c1, c2, c3 = st.columns(3)
     vals = base["Forecast_Chlorophyll_Kalman"]
     with c1:
@@ -641,6 +662,7 @@ else:
 """,
             unsafe_allow_html=True,
         )
+
 
 # ============================================================
 # 3. 데이터 자세히 보기
