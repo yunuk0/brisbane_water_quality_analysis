@@ -380,8 +380,8 @@ with col_hero_main:
 
     hero_html = f"""<div class="hero-card">
 <div class="hero-left">
-  <div class="hero-title">TODAY • BRISBANE RIVER • COLMSLIE BOAT RAMP</div>
-  <div class="hero-location">수질 관측 부이</div>
+  <div class="hero-title">TODAY • BRISBANE RIVER • COLMSLIE</div>
+  <div class="hero-location"> </div>
 
   <div class="hero-main-row">
     <span class="hero-main-value">{chl_text}</span>
