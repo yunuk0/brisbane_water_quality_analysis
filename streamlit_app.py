@@ -381,7 +381,7 @@ with col_hero_main:
     hero_html = f"""<div class="hero-card">
 <div class="hero-left">
   <div class="hero-title">TODAY • BRISBANE RIVER • COLMSLIE</div>
-  <div class="hero-location"> </div>
+  <div class="hero-location">현재 조류량 (클로로필 기준)</div>
 
   <div class="hero-main-row">
     <span class="hero-main-value">{chl_text}</span>
