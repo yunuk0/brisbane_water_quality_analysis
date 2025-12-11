@@ -381,14 +381,14 @@ with col_hero_main:
     hero_html = f"""<div class="hero-card">
 <div class="hero-left">
   <div class="hero-title">TODAY • BRISBANE RIVER • COLMSLIE</div>
-  <div class="hero-location">현재 조류량 (클로로필 기준)</div>
+  <div class="hero-location">현재 조류량</div>
 
   <div class="hero-main-row">
     <span class="hero-main-value">{chl_text}</span>
     <span class="hero-main-unit">µg/L</span>
   </div>
 
-  <div class="hero-label">현재 조류량 (클로로필 기준)</div>
+  <div class="hero-label"> 조류 농도 (클로로필 기준)</div>
   <div class="hero-subtext">{level_msg}</div>
   <div class="hero-subtext hero-subtext-note">
     ※ 환경부·호주 환경기준 참고(0–4 µg/L 양호, 4–8 주의, 8 이상 위험)
