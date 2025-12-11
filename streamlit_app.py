@@ -64,13 +64,7 @@ st.markdown(
     border: 1px solid rgba(148, 163, 184, 0.4);
 }}
 
-/* (여기에 나머지 CSS 규칙을 그대로 붙여넣으세요) */
-
-</style>
-""",
-    unsafe_allow_html=True
-)
-
+/* (
 /* =========================================================
    메인 카드 (모바일 = 1단, 데스크톱 = 2단)
    ========================================================= */
@@ -245,9 +239,12 @@ div[data-testid="stMetricValue"] {
 div[data-testid="stMetricDelta"] {
     color: #f97316 !important;   /* 증감(▲/▼) 사용하는 경우 */
 }
+
+) */
+
 </style>
 """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
 
 # ============================================================
