@@ -355,15 +355,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<div class="sub-title">브리즈번 강(Colmslie Buoy) 수질을 날씨앱처럼 쉽게 확인하세요.</div>',
+    '<div class="sub-title">브리즈번 강 수질을 날씨앱처럼 쉽게 확인하세요.</div>',
     unsafe_allow_html=True,
 )
 st.markdown(
     """
-<span class="tag-pill">실시간 센서</span>
-<span class="tag-pill">조류(녹조) 모니터링</span>
+<span class="tag-pill">센서 데이터</span>
+<span class="tag-pill">실시간 모니터링</span>
+<span class="tag-pill">클로로필 농도</span>
 <span class="tag-pill">7일 예보</span>
-<span class="tag-pill">市민용 안내</span>
+<span class="tag-pill">수질 정보 안내</span>
 """,
     unsafe_allow_html=True,
 )
@@ -379,15 +380,15 @@ with col_hero_main:
 
     hero_html = f"""<div class="hero-card">
 <div class="hero-left">
-  <div class="hero-title">TODAY • BRISBANE RIVER</div>
-  <div class="hero-location">Colmslie 수질 관측 부이</div>
+  <div class="hero-title">TODAY • BRISBANE RIVER • COLMSLIE BOAT RAMP</div>
+  <div class="hero-location">수질 관측 부이</div>
 
   <div class="hero-main-row">
     <span class="hero-main-value">{chl_text}</span>
     <span class="hero-main-unit">µg/L</span>
   </div>
 
-  <div class="hero-label">현재 조류(클로로필)</div>
+  <div class="hero-label">현재 조류량 (클로로필 기준)</div>
   <div class="hero-subtext">{level_msg}</div>
   <div class="hero-subtext hero-subtext-note">
     ※ 환경부·호주 환경기준 참고(0–4 µg/L 양호, 4–8 주의, 8 이상 위험)
@@ -405,7 +406,7 @@ with col_hero_main:
     st.markdown(hero_html, unsafe_allow_html=True)
 
 with col_hero_side:
-    st.markdown('<div class="small-title">오늘 조류(녹조) 범위</div>', unsafe_allow_html=True)
+    st.markdown('<div class="small-title">오늘 조류 농도 범위</div>', unsafe_allow_html=True)
     range_text = (
         f"{today_min:.1f} ~ {today_max:.1f} µg/L"
         if not pd.isna(today_min)
@@ -413,7 +414,7 @@ with col_hero_side:
     )
     st.markdown(
         f"""<div class="chip-box">
-<div class="chip-label">오늘 최소 · 최대 (보정값 기준)</div>
+<div class="chip-label">오늘 최소 · 최대 (예측값 기준)</div>
 <div class="chip-value">{range_text}</div>
 </div>""",
         unsafe_allow_html=True,
