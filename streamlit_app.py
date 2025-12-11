@@ -17,6 +17,7 @@ st.set_page_config(
 st.markdown(
     f"""
 <style>
+/* 전체 배경 */
 .stApp {{
     background-image: url('{current_bg}');
     background-size: cover;
@@ -26,47 +27,31 @@ st.markdown(
 }}
 
 /* 기본 padding: 모바일 기준 */
-.block-container {
+.block-container {{
     padding-top: 3.5rem;
     padding-bottom: 2rem;
     padding-left: 1.2rem;
     padding-right: 1.2rem;
-}
-</style>
-""",
-    unsafe_allow_html=True
-)
+}}
 
-
-/* 큰 화면에서만 좌우 여유를 더 줌 */
-@media (min-width: 1200px) {
-  .block-container {
+/* 큰 화면에서만 좌우 padding 증가 */
+@media (min-width: 1200px) {{
+  .block-container {{
       padding-left: 5rem;
       padding-right: 5rem;
-  }
-}
+  }}
+}}
 
-.main-title {
+.main-title {{
     font-size: clamp(22px, 2.3vw, 30px);
     font-weight: 800;
     margin-bottom: 0.25rem;
     color: #f9fafb;
-}
-.sub-title {
+}}
+
+.sub-title {{
     font-size: 14px;
-    opacity: 0.8;
-    margin-bottom: 1rem;
-}
-.tag-pill {
-    display: inline-block;
-    padding: 0.15rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    margin-right: 0.25rem;
-    background-color: rgba(15, 23, 42, 0.8);
-    color: #e5e7eb;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-}
+    opaci
 
 /* =========================================================
    메인 카드 (모바일 = 1단, 데스크톱 = 2단)
