@@ -95,7 +95,6 @@ def build_activity_recommendation(chl, temp, turb, label):
         color = "#22c55e"
         title = "레저 활동하기 좋은 날"
         msg = (
-            f"조류 농도 {chl:.1f} µg/L, 수온 {temp:.1f} °C, 탁도 {turb:.1f} NTU 수준으로 "
             "카약·패들보드 등 가벼운 수상 레저와 물가 산책을 즐기기 좋습니다. "
             "어린이 물놀이는 항상 보호자와 함께해 주세요."
         )
@@ -103,7 +102,6 @@ def build_activity_recommendation(chl, temp, turb, label):
         color = "#ef4444"
         title = "물놀이 자제 권고"
         msg = (
-            f"조류 농도 {chl:.1f} µg/L로 높은 편이며, 탁도 {turb:.1f} NTU 수준입니다. "
             "수영·튜브 등 직접 물에 들어가는 활동은 가급적 피하는 것이 좋습니다. "
             "강 주변 산책이나 조망 위주의 활동을 추천드립니다."
         )
@@ -111,7 +109,7 @@ def build_activity_recommendation(chl, temp, turb, label):
         color = "#eab308"
         title = "가벼운 활동 권장 (주의)"
         msg = (
-            f"조류 농도 {chl:.1f} µg/L, 수온 {temp:.1f} °C 수준으로 일부 시간대에 조류가 다소 높을 수 있습니다. "
+            "일부 시간대에 조류가 다소 높을 수 있습니다. "
             "카약·보트 등은 가능하지만, 물과의 직접 접촉은 줄이고 샤워 등 위생 관리를 신경 써 주세요."
         )
 
@@ -242,6 +240,7 @@ else:
 
 hero_icon_uri = get_base64_image(hero_icon_path) if hero_icon_path is not None else None
 
+
 # ============================================================
 # CSS 스타일
 # ============================================================
@@ -288,7 +287,7 @@ css_block += """
     backdrop-filter: blur(18px);
 }
 
-/* Plotly 차트 카드 스타일 */
+/* Plotly 차트 카드 스타일(기본) */
 div[data-testid="stPlotlyChart"] {
     background-color: rgba(15, 23, 42, 0.75);
     border-radius: 1.4rem;
@@ -437,26 +436,23 @@ div[data-testid="stPlotlyChart"] {
 /* 주간 예보 카드 */
 .week-card-header {
     display: flex;
-    align-items: flex-start;        /* ✅ 제목/기간 텍스트 상단 정렬 */
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 0.45rem;
     font-size: 0.86rem;
 }
 .week-card-title {
-    font-size: 1.05rem;            /* ✅ 1) 제목 크기 조절 */
+    font-size: 1.05rem;
     font-weight: 700;
-    transform: translateY(-2px);   /* ✅ 1) 제목 위치 미세조정(위로) */
+    transform: translateY(-2px);
 }
 .week-subtitle {
     font-size: 0.76rem;
     opacity: 0.85;
 }
-
 .week-rows {
     margin-top: 0.25rem;
 }
-
-/* ✅ 2) 평균 열 추가로 grid 컬럼 6개로 변경 */
 .week-header-row {
     display: grid;
     grid-template-columns: 1.5fr 1.6fr 0.9fr 0.9fr 4.0fr 0.9fr;
@@ -468,7 +464,6 @@ div[data-testid="stPlotlyChart"] {
     margin-bottom: 0.15rem;
     text-align: center;
 }
-
 .week-row {
     display: grid;
     grid-template-columns: 1.5fr 1.6fr 0.9fr 0.9fr 4.0fr 0.9fr;
@@ -478,30 +473,19 @@ div[data-testid="stPlotlyChart"] {
     font-size: 0.82rem;
     text-align: center;
 }
-
-.week-day {
-    font-weight: 500;
-}
+.week-day { font-weight: 500; }
 .week-status {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
 }
-.week-emoji {
-    font-size: 1.0rem;
-}
-.week-status-text {
-    font-size: 0.78rem;
-    opacity: 0.9;
-}
-.week-mean,
-.week-min,
-.week-max {
+.week-emoji { font-size: 1.0rem; }
+.week-status-text { font-size: 0.78rem; opacity: 0.9; }
+.week-mean, .week-min, .week-max {
     font-variant-numeric: tabular-nums;
     opacity: 0.9;
 }
-
 .week-range-track {
     position: relative;
     height: 0.42rem;
@@ -511,12 +495,9 @@ div[data-testid="stPlotlyChart"] {
 }
 .week-range-bar {
     position: absolute;
-    top: 0;
-    bottom: 0;
+    top: 0; bottom: 0;
     border-radius: 999px;
 }
-
-/* 평균값 빨간 굵은 바 */
 .week-mean-marker {
     position: absolute;
     top: -0.14rem;
@@ -526,7 +507,7 @@ div[data-testid="stPlotlyChart"] {
     border-radius: 999px;
 }
 
-/* 지표 조회 날짜 위젯 스타일 */
+/* 지표 조회 날짜 위젯 */
 div[data-testid="stDateInput"] label {
     color: #f9fafb !important;
     font-size: 0.78rem;
@@ -542,30 +523,13 @@ div[data-testid="stDateInput"] input {
     background-color: #f9fafb !important;
     caret-color: #000000 !important;
 }
-div[data-testid="stDateInput"] svg {
-    color: #f9fafb !important;
-}
+div[data-testid="stDateInput"] svg { color: #f9fafb !important; }
 
-/* 데이터 테이블 섹션 */
-.expander-text {
-    font-size: 0.8rem;
-    opacity: 0.85;
-}
-
-/* expander 제목/다운로드 버튼 글자색 검정 */
-div[data-testid="stExpander"] summary {
-    color: #000000 !important;
-}
-div[data-testid="stDownloadButton"] button {
-    color: #000000 !important;
-}
-
-/* ✅ expander 위쪽 간격 추가 */
-div[data-testid="stExpander"] {
-    margin-top: 1.2rem;
-}
-
-/* ✅ expander 내용 전체를 카드처럼 */
+/* expander */
+.expander-text { font-size: 0.8rem; opacity: 0.85; }
+div[data-testid="stExpander"] summary { color: #000000 !important; }
+div[data-testid="stDownloadButton"] button { color: #000000 !important; }
+div[data-testid="stExpander"] { margin-top: 1.2rem; }
 div[data-testid="stExpanderDetails"] {
     background-color: rgba(15, 23, 42, 0.75);
     border-radius: 1.4rem;
@@ -574,25 +538,65 @@ div[data-testid="stExpanderDetails"] {
     backdrop-filter: blur(18px);
     border: 1px solid rgba(148, 163, 184, 0.4);
 }
-
-/* ✅ expander 안 Plotly는 '카드 중복' 제거 */
 div[data-testid="stExpanderDetails"] div[data-testid="stPlotlyChart"] {
     background-color: transparent !important;
     box-shadow: none !important;
     padding: 0 !important;
 }
-
-/* (선택) expander 안 DataFrame 정리 */
 div[data-testid="stExpanderDetails"] div[data-testid="stDataFrame"] {
     border-radius: 1.0rem;
     overflow: hidden;
     border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
-/* ✅ 슬라이더/셀렉트 라벨 흰색 */
+/* 슬라이더/셀렉트 라벨 흰색 */
 div[data-testid="stSlider"] label,
 div[data-testid="stSelectbox"] label {
     color: #f9fafb !important;
+}
+
+/* ============================================================
+   ✅ 이번주 '시간별 추세' 섹션을 "컨테이너 전체" 카드화 (텍스트+그래프 한 박스)
+   ============================================================ */
+#weekly-trend-anchor { display:none; }
+
+/* 컨테이너(= st.container()) 전체를 카드처럼 */
+div[data-testid="stVerticalBlock"]:has(#weekly-trend-anchor) {
+    background-color: rgba(15, 23, 42, 0.75);
+    border-radius: 1.4rem;
+    padding: 1.35rem 1.25rem 1.1rem 1.25rem;  /* ✅ 상단 여유(잘림 방지) */
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    backdrop-filter: blur(18px);
+    overflow: hidden; /* ✅ 라운드에 맞춰 내부 클리핑 */
+}
+
+/* 컨테이너 안 요소 간 간격 약간 정리 */
+div[data-testid="stVerticalBlock"]:has(#weekly-trend-anchor) > div[data-testid="stElementContainer"] {
+    margin-bottom: 0.35rem !important;
+}
+
+/* 컨테이너 안 Plotly는 '카드 중복' 제거 (그래프는 투명) */
+div[data-testid="stVerticalBlock"]:has(#weekly-trend-anchor) div[data-testid="stPlotlyChart"] {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* 제목/설명 텍스트 스타일 */
+.weekly-trend-title {
+    font-size: clamp(18px, 2.4vw, 22px);
+    font-weight: 800;
+    line-height: 1.25;
+    color: #f9fafb;
+    margin: 0.15rem 0 0.2rem 0;
+}
+.weekly-trend-sub {
+    font-size: clamp(13px, 1.9vw, 15px);
+    line-height: 1.35;
+    color: rgba(249,250,251,0.92);
+    margin: 0 0 0.35rem 0;
+    word-break: keep-all;
 }
 
 </style>
@@ -687,7 +691,9 @@ with col_hero_side:
         )
 
     chl_label_for_rec, _, _, _ = classify_chl(sel_chl)
-    rec_title, rec_color, rec_msg = build_activity_recommendation(sel_chl, sel_temp, sel_turb, chl_label_for_rec)
+    rec_title, rec_color, rec_msg = build_activity_recommendation(
+        sel_chl, sel_temp, sel_turb, chl_label_for_rec
+    )
 
     st.markdown(
         f"""
@@ -773,28 +779,7 @@ else:
         period_end = daily["date"].max()
         period_text = f"{period_start.strftime('%m월 %d일')} ~ {period_end.strftime('%m월 %d일')}"
 
-        # 최대 예보 문구(날짜/수치 강조)
-        max_info_text = None
-        if forecast_df is not None and not forecast_df.empty:
-            idxmax = forecast_df["Forecast_Chlorophyll_Kalman"].idxmax()
-            max_future_value = forecast_df.loc[idxmax, "Forecast_Chlorophyll_Kalman"]
-            max_future_time = forecast_df.loc[idxmax, "Timestamp"]
-
-            if pd.notna(max_future_value) and pd.notna(max_future_time):
-                lab, emo, _, _ = classify_chl(max_future_value)
-                t_txt = max_future_time.strftime("%Y-%m-%d %H:%M")
-
-                date_color = "#60a5fa"
-                value_color = "#f97316"
-
-                max_info_text = (
-                    "가장 조류 농도가 높게 예보된 시점은 "
-                    f"<span style='color:{date_color}; font-weight:700;'>{t_txt}</span>"
-                    "이며, 예측값은 약 "
-                    f"<span style='color:{value_color}; font-weight:800;'>{max_future_value:.1f} µg/L</span>"
-                    f" ({emo} {lab}) 입니다."
-                )
-
+        # ----- 라인 그래프 조회 바 -----
         st.markdown(
             '<div class="info-text" style="margin-top:0.4rem; margin-bottom:0.15rem;">라인 그래프 조회 일자</div>',
             unsafe_allow_html=True,
@@ -816,6 +801,30 @@ else:
 
         line_df = df_fore.loc[mask].copy().sort_values("Timestamp")
 
+        # ✅ 선택 기간(전체/하루) 기준으로 "최대 예보" 다시 계산
+        max_info_html = ""
+        if not line_df.empty and line_df["Forecast_Chlorophyll_Kalman"].notna().any():
+            idxmax = line_df["Forecast_Chlorophyll_Kalman"].idxmax()
+            max_future_value = line_df.loc[idxmax, "Forecast_Chlorophyll_Kalman"]
+            max_future_time = line_df.loc[idxmax, "Timestamp"]
+
+            if pd.notna(max_future_value) and pd.notna(max_future_time):
+                lab, emo, _, _ = classify_chl(max_future_value)
+                t_txt = max_future_time.strftime("%Y-%m-%d %H:%M")
+
+                prefix_txt = "이번주 전체 기간 중" if selected_line_date is None else f"{selected_line_date.strftime('%m/%d')} 기간 중"
+
+                date_color = "#60a5fa"
+                value_color = "#f97316"
+
+                max_info_html = (
+                    f"<span style='color:{date_color}; font-weight:800;'>{prefix_txt}</span> 가장 조류 농도가 높게 예보된 시점은 "
+                    f"<span style='color:{date_color}; font-weight:800;'>{t_txt}</span>이며, "
+                    f"예측값은 약 <span style='color:{value_color}; font-weight:900;'>{max_future_value:.1f} µg/L</span>"
+                    f" ({emo} {lab}) 입니다."
+                )
+
+        # 시간별 예측 라인 그래프
         if not line_df.empty:
             y_max = max(line_df["Forecast_Chlorophyll_Kalman"].max(), 10)
 
@@ -848,10 +857,12 @@ else:
                 hovertemplate="%{x}<br>클로로필: %{y:.2f} µg/L<extra></extra>",
             ))
 
+            # ✅ Plotly 내부 title 제거(“undefined”/잘림 방지), 텍스트는 Streamlit 마크다운으로 카드 상단에 표시
             fig.update_layout(
-                height=260,
-                margin=dict(l=10, r=10, t=45, b=95),
+                height=290,
+                margin=dict(l=10, r=10, t=10, b=10),
                 showlegend=False,
+                title_text="",
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#ffffff"),
@@ -871,25 +882,20 @@ else:
                     title_font=dict(color="#ffffff", size=12),
                     tickfont=dict(color="#ffffff", size=11),
                 ),
-                title=dict(
-                    text="이번주 시간별 조류 농도 추세",
-                    x=0.00, xanchor="left",
-                    y=0.95, yanchor="top",
-                    font=dict(size=18, color="#ffffff"),
-                ),
             )
 
-            if max_info_text:
-                fig.add_annotation(
-                    x=-0.02, y=-0.50, xref="paper", yref="paper",
-                    text=max_info_text,
-                    showarrow=False,
-                    xanchor="left", yanchor="bottom",
-                    align="left",
-                    font=dict(size=16, color="#ffffff"),
-                )
+            # ✅ 텍스트+그래프를 "같은 박스"로 묶어서 출력
+            with st.container():
+                st.markdown('<div id="weekly-trend-anchor"></div>', unsafe_allow_html=True)
+                st.markdown('<div class="weekly-trend-title">이번주 시간별 조류 농도 추세</div>', unsafe_allow_html=True)
 
-            st.plotly_chart(fig, use_container_width=True)
+                if max_info_html:
+                    st.markdown(f'<div class="weekly-trend-sub">{max_info_html}</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown('<div class="weekly-trend-sub">최대 예보 정보를 계산할 수 없습니다.</div>', unsafe_allow_html=True)
+
+                st.plotly_chart(fig, use_container_width=True)
+
         else:
             st.info("선택한 기간에 대한 예측 데이터가 없습니다.")
 
